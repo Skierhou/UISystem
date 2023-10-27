@@ -19,7 +19,7 @@ namespace SkierFramework
     "UI/Skin/DropdownArrow.psd"
     "UI/Skin/UIMask.psd"
     */
-    public class OverrideUIComponent
+    public class OverrideUICreate
     {
         [MenuItem("GameObject/UI/Image", true)]
         public static void IgnoreImage()
