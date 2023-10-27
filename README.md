@@ -105,69 +105,6 @@ public class UILayerLogic
     public void OpenUI(UIViewController openedUI);              // 打开界面时调用，分配order，并覆盖同层UI
     public void CloseUI(UIViewController closedUI);             // 关闭界面时调用，归还order，并恢复order比关闭界面的order要小的界面，要注意上面提到的两个问题
 }
-
-// 关闭UI的实现
-public void CloseUI(UIViewController closedUI)
-{
-    int order = closedUI.order;
-    PushOrder(closedUI);
-    closedUI.order = 0;
-
-    if (openedViews.Count > 0)
-    {
-        // 不是窗口时
-        if (!closedUI.isWindow)
-        {
-            foreach (var viewController in openedViews)
-            {
-                if (viewController != closedUI
-                    && viewController.isOpen
-                    && viewController.order < order)
-                {
-                    // 在AddTopViewNum中控制覆盖个数，为0时显示
-                    viewController.AddTopViewNum(-1);
-                }
-            }
-        }
-    }
-}
-
-public void PushOrder(UIViewController closedUI)
-{
-    int order = closedUI.order;
-    if (orders.Remove(order))
-    {
-        // 重新计算最大值
-        if(maxOrder == order)
-        {
-            maxOrder = (int)layer;
-            foreach (var temp in orders)
-            {
-                maxOrder = Mathf.Max(maxOrder, temp);
-            }
-        }
-
-        // 移除界面
-        List<UIViewController> list = ListPool<UIViewController>.Get();
-        while (openedViews.Count > 0)
-        {
-            var view = openedViews.Pop();
-            if (view != closedUI)
-            {
-                list.Add(view);
-            }
-            else
-            {
-                break;
-            }
-        }
-        for (int i = list.Count - 1; i >= 0; i--)
-        {
-            openedViews.Push(list[i]);
-        }
-        ListPool<UIViewController>.Release(list);
-    }
-}
 ```
 
 
@@ -238,6 +175,7 @@ UI绑定方式很多，Monobehavior上开放变量绑在预制体上然后一个
 为方便一键创建UI，一般项目都会使用自动化生成工具，一键创建：UI类，UI枚举，UI配置等。使用上只需要准备好界面预制体，点击生成即可。
 生成规则很简单，都是一些字符串替换，本地写一份UI类的模板，生成UI类时替换里面的名称关键字即可，枚举和配置同理，在上面用一个特性注释或符号作为标记，每次新增字符串替换后在底部继续做上标记。
 如我的模板文件，名字替换XXX，中间的//UIControlData替换成预制体绑定的子元素信息。
+本项目中的快速创建UI步骤：创建预制体--》选中右键，点击CreateUI--》会自动生成同预制体的名字的ui类，ui枚举，和ui配置，ui配置所在路径为Assets/AssetsPackage/UI/UIConfig.json，默认设置界面为窗口，如果为全屏界面则自行修改配置文件。
 ```
 using System;
 using System.Collections.Generic;
@@ -370,7 +308,7 @@ namespace SkierFramework
 ```
 
 ## 循环滚动列表
-在遇到成百上千的数据时，不可能同时生成这么多的UIItem在游戏里，而是只生成可以看到的个数，因此这个也是UI开发中非常重要的功能。github上比较好用的就是(LoopScrollRect)[https://github.com/qiankanglai/LoopScrollRect]，支持的功能很全面。
+在遇到成百上千的数据时，不可能同时生成这么多的UIItem在游戏里，而是只生成可以看到的个数，因此这个也是UI开发中非常重要的功能。github上比较好用的就是[LoopScrollRect](https://github.com/qiankanglai/LoopScrollRect)，支持的功能很全面。
 不过由于个人使用习惯，还是自己实现了一份滚动列表，其主要功能是：上下左右，可多行多列，重复使用item，附带选中功能，分页功能，可支持item动态大小，代码就不做展示了，在项目中自行提取。
 
 ## UIManager
@@ -408,11 +346,16 @@ public class UIManager
 不同UI之间如果需要交互，为了解耦通常情况下不会直接获取UI引用，而是通过事件的方式，因此还需要在UIManager上实现一下事件系统，方便UI之间的交互。
 
 ## UI动画
-UI界面打开和关闭时通常会存在动画播放，因此我将打开关闭的动画也做进了UI打开和关闭的流程中，实现了简单的几种UI开关表现，如：Animation播放的动画，透明度动画，缩放动画，以及3钟动画的合并播放，在动画播放完成才算完成UI的打开/关闭，详细代码可参考：UIViewAnim，使用方式只需挂载到对应界面预制体上并设置打开关闭模式即可。
-在之前用过NGUI，其中有UITweener的实现，个人觉得非常好用，在UI上制作简单的移动，旋转，缩放，Loop动画等都较为方便，因此也将其挪了过来，方便程序做一些简单动画效果。
+UI界面打开和关闭时通常会存在动画播放，因此我将打开关闭的动画也做进UI打开/关闭的流程中，实现了简单的几种UI开关表现，如：Animation播放的动画，透明度动画，缩放动画，以及3钟动画的合并播放，在动画播放完成才算完成UI的打开/关闭，详细代码可参考：UIViewAnim，使用方式只需挂载到对应界面预制体上并设置打开关闭模式即可。
+在之前有用过NGUI，其中有UITweener的实现，个人觉得非常好用，在UI上制作简单的移动，旋转，缩放，Loop动画等都较为方便，因此也将其挪了过来，方便程序做一些简单动画效果。
+
+## UI中显示模型
+如果UI中想要显示出模型，首先Canvas需要设置为Screen Space - Camera或者World Space模式，本项目中的UILayer，除SceneLayer外全部使用Screen Space - Camera模式，因此直接将模型加载至UI界面下就可显示，这种方式只适合平面模型(没有透视效果)，这样显示3D模型的效果也不太符合预期，因此还需要另一种在UI上显示模型的方式。
+思路是：使用RawImage，创建一张RT，一个相机，使用这个相机照在3D模型上，再渲染到RT上，RT显示在RawImage上。
+具体实现就不详细写了，思路一致，参考项目中的：UIModelManager，UIRenderTexture。对这类模型使用单独的光照，其中可能还需要实现3D模型的拖动效果，以及点击反馈等，通常显示3D模型也需要有一定的交互效果。
 
 ## 总结
 框架的作用是为了减轻相关功能的制作流程，重复的部分全部由框架内部完成，以上是我目前能想到的所有关于UI制作中遇到的部分，肯定有我没接触过的部分，也有可能有很多不足，仅限于个人项目理解。
 
 ## 项目链接
-(UISystem)[https://github.com/Skierhou/UISystem.git]
+[UISystem](https://github.com/Skierhou/UISystem.git)
