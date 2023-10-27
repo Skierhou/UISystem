@@ -43,7 +43,7 @@ namespace SkierFramework
         /// 加载一个模型到一张RawImage上
         /// </summary>
         public void LoadModelToRawImage(string path, RawImage rawImage, bool canDrag = true, Vector3 offset = default,
-            Quaternion rot = default, Vector3 scale = default, float orthographicSize = 1, Action<UIRenderToTexture, GameObject> callback = null)
+            Quaternion rot = default, Vector3 scale = default, bool isOrth = true, float orthSizeOrFOV = 1, Action<UIRenderToTexture, GameObject> callback = null)
         {
             if (rawImage == null)
             {
@@ -56,12 +56,12 @@ namespace SkierFramework
             {
                 UnLoadModelByRawImage(rawImage);
                 rawImage.enabled = true;
-                LoadModelToRawImage(go, rawImage, canDrag, offset, rot, scale, orthographicSize, callback);
+                LoadModelToRawImage(go, rawImage, canDrag, offset, rot, scale, isOrth, orthSizeOrFOV, callback);
             });
         }
 
         public void LoadModelToRawImage(GameObject go, RawImage rawImage, bool canDrag, Vector3 offset = default,
-            Quaternion rot = default, Vector3 scale = default, float orthographicSize = 1, Action<UIRenderToTexture, GameObject> callback = null)
+            Quaternion rot = default, Vector3 scale = default, bool isOrth = true, float orthSizeOrFOV = 1, Action<UIRenderToTexture, GameObject> callback = null)
         {
             if (go != null)
             {
@@ -78,7 +78,7 @@ namespace SkierFramework
                 }
 
                 pos = new Vector3(100 * index, -10000, 0); 
-                renderToTexture.Init(pos, orthographicSize, index);
+                renderToTexture.Init(pos, isOrth, orthSizeOrFOV, index);
                 UpdateLight();
 
                 go.SetLayerRecursively(Layer.UIRenderToTarget);

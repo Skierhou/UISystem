@@ -40,14 +40,14 @@ namespace SkierFramework
         }
 
 
-        public void Init(Vector3 vec, float orth, int index)
+        public void Init(Vector3 vec, bool isOrth, float orth, int index)
         {
-            InitCamera(orth);
+            InitCamera(isOrth, orth);
             m_Index = index;
             if (m_Camera)
             {
-                m_Camera.transform.localPosition = vec + new Vector3(0, 0, -20);
-                m_Camera.transform.localEulerAngles = new Vector3(0, 0, 0);
+                m_Camera.transform.localPosition = vec + new Vector3(0, 0, 20);
+                m_Camera.transform.localEulerAngles = new Vector3(0, 180, 0);
             }
 
             if (m_RawImage == null)
@@ -62,7 +62,7 @@ namespace SkierFramework
             m_RawImage.texture = m_RenderTexture;
         }
 
-        private void InitCamera(float orth)
+        private void InitCamera(bool isOrth, float orth)
         {
             if (m_Camera == null)
             {
@@ -72,8 +72,9 @@ namespace SkierFramework
             {
                 m_Camera.gameObject.SetActive(true);
             }
-            m_Camera.orthographic = true;
+            m_Camera.orthographic = isOrth;
             m_Camera.orthographicSize = orth;
+            m_Camera.fieldOfView = orth;
             m_orthographicSize = orth;
         }
 

@@ -56,6 +56,8 @@ namespace SkierFramework
         private UIScrollView UIScrollView;
         [ControlBinding]
         private GameObject Item;
+        [ControlBinding]
+        private RawImage RawImage;
 
 #pragma warning restore 0649
         #endregion
@@ -94,6 +96,8 @@ namespace SkierFramework
             }
             UIScrollView.UpdateList(list, Item, typeof(UITestItem));
             UIScrollView.Select(10);
+
+            UIModelManager.Instance.LoadModelToRawImage("Assets/AssetsPackage/TestModel.prefab", RawImage, scale: Vector3.one * 6, isOrth: false, orthSizeOrFOV: 60);
         }
 
         public override void OnAddListener()
@@ -109,6 +113,7 @@ namespace SkierFramework
         public override void OnClose()
         {
             base.OnClose();
+            UIModelManager.Instance.UnLoadModelByRawImage(RawImage);
         }
     }
 }

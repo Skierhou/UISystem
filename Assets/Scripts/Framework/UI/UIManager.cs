@@ -76,6 +76,7 @@ namespace SkierFramework
             _uiCamera = camera.GetOrAddComponent<Camera>();
             _uiCamera.cullingMask = 1 << Layer.UI;
             _uiCamera.transform.SetParent(_root);
+            _uiCamera.orthographic = true;
 
             EventSystem = EventSystem.current;
 
