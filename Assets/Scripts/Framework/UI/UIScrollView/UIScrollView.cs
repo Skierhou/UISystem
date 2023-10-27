@@ -125,10 +125,10 @@ namespace SkierFramework
             RectTransform rect = prefab.GetComponent<RectTransform>();
             m_ChildWidth = rect.rect.width * rect.transform.localScale.x;
             m_ChildHeight = rect.rect.height * rect.transform.localScale.y;
-            
-            if (parentRect.width == 0 || m_AlignType != AlignType.Center)
+
+            var parent = (m_Content.parent as RectTransform);
+            if (parentRect != parent.rect || m_AlignType != AlignType.Center)
             {
-                var parent = (m_Content.parent as RectTransform);
                 parentRect = parent.rect;
             }
             m_HorizontalCount = Mathf.CeilToInt((parentRect.width - m_HorizontalStartSpace) / (m_ChildWidth + m_HorizontalSpace));
@@ -581,7 +581,7 @@ namespace SkierFramework
             if (m_Datas == null || m_PrefabPool == null || m_ItemType == null) return;
 
             var parent = (m_Content.parent as RectTransform);
-            if (parentRect.width != parent.rect.width)
+            if (parentRect != parent.rect)
             {
                 parentRect = parent.rect;
                 UpdateList(m_Datas, m_PrefabPool.Prefab, m_ItemType, true, m_UserData);

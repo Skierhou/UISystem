@@ -113,26 +113,26 @@ namespace SkierFramework
                     if (rect == null)
                     {
                         _blacks[0] = rect = UIExtension.CreateBlackMask(parent, 1, "right").transform as RectTransform;
-                        rect.pivot = new Vector2(0, 0.5f);
-                        rect.anchorMin = new Vector2(1, 0);
-                        rect.anchorMax = new Vector2(1, 1);
-                        rect.sizeDelta = new Vector2(Screen.width, 0);
                     }
                     else if (Mathf.Abs(rect.anchoredPosition.x * 2 + parent.rect.width - width) < 1)
                     {
                         return;
                     }
+                    rect.pivot = new Vector2(0, 0.5f);
+                    rect.anchorMin = new Vector2(1, 0);
+                    rect.anchorMax = new Vector2(1, 1);
+                    rect.sizeDelta = new Vector2(Mathf.Abs(width - parent.rect.width), 0);
                     rect.anchoredPosition = new Vector2((width - parent.rect.width) / 2, 0);
 
                     rect = _blacks[1];
                     if (rect == null)
                     {
                         _blacks[1] = rect = UIExtension.CreateBlackMask(parent, 1, "left").transform as RectTransform;
-                        rect.pivot = new Vector2(1, 0.5f);
-                        rect.anchorMin = new Vector2(0, 0);
-                        rect.anchorMax = new Vector2(0, 1);
-                        rect.sizeDelta = new Vector2(Screen.width, 0);
                     }
+                    rect.pivot = new Vector2(1, 0.5f);
+                    rect.anchorMin = new Vector2(0, 0);
+                    rect.anchorMax = new Vector2(0, 1);
+                    rect.sizeDelta = new Vector2(Mathf.Abs(width - parent.rect.width), 0);
                     rect.anchoredPosition = new Vector2(-(width - parent.rect.width) / 2, 0);
                     break;
                 case UIBlackType.Width:
@@ -141,26 +141,26 @@ namespace SkierFramework
                     if (rect == null)
                     {
                         _blacks[0] = rect = UIExtension.CreateBlackMask(parent, 1, "top").transform as RectTransform;
-                        rect.pivot = new Vector2(0.5f, 0);
-                        rect.anchorMin = new Vector2(0, 1);
-                        rect.anchorMax = new Vector2(1, 1);
-                        rect.sizeDelta = new Vector2(0, Screen.height);
                     }
                     else if (Mathf.Abs(rect.anchoredPosition.y * 2 + parent.rect.height - height) < 1)
                     {
                         return;
                     }
+                    rect.pivot = new Vector2(0.5f, 0);
+                    rect.anchorMin = new Vector2(0, 1);
+                    rect.anchorMax = new Vector2(1, 1);
+                    rect.sizeDelta = new Vector2(0, Mathf.Abs(height - parent.rect.height));
                     rect.anchoredPosition = new Vector2(0, (height - parent.rect.height) / 2);
 
                     rect = _blacks[1];
                     if (rect == null)
                     {
                         _blacks[1] = rect = UIExtension.CreateBlackMask(parent, 1, "bottom").transform as RectTransform;
-                        rect.pivot = new Vector2(0.5f, 1);
-                        rect.anchorMin = new Vector2(0, 0);
-                        rect.anchorMax = new Vector2(1, 0);
-                        rect.sizeDelta = new Vector2(0, Screen.height);
                     }
+                    rect.pivot = new Vector2(0.5f, 1);
+                    rect.anchorMin = new Vector2(0, 0);
+                    rect.anchorMax = new Vector2(1, 0);
+                    rect.sizeDelta = new Vector2(0, Mathf.Abs(height - parent.rect.height));
                     rect.anchoredPosition = new Vector2(0, -(height - parent.rect.height) / 2);
                     break;
                 default:
@@ -174,10 +174,15 @@ namespace SkierFramework
             if (uIBlackType == UIBlackType.AutoBlack)
             {
                 var parent = _layers[UILayer.BackgroundLayer].canvas.transform as RectTransform;
-                if (Mathf.Abs(width - parent.rect.width) > Mathf.Abs(height - parent.rect.height))
-                    uIBlackType = UIBlackType.Width;
-                else
+                float widthDis = Mathf.Abs(width - parent.rect.width);
+                float heightDis = Mathf.Abs(height - parent.rect.height);
+
+                if (widthDis < 1 && heightDis < 1)
+                    uIBlackType = UIBlackType.None;
+                else if (widthDis > heightDis)
                     uIBlackType = UIBlackType.Height;
+                else
+                    uIBlackType = UIBlackType.Width;
             }
             return uIBlackType;
         }

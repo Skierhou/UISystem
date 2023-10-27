@@ -9,9 +9,9 @@ namespace SkierFramework
         SceneLayer = 1000,
         BackgroundLayer = 2000,
         NormalLayer = 3000,
-        TipLayer = 4000,
-        DebugLayer = 5000,
-        TopLayer = 6000,
+        InfoLayer = 4000,
+        TopLayer = 5000,
+        TipLayer = 6000,
         BlackMaskLayer = 7000,
     }
 

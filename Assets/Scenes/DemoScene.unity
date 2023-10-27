@@ -605,4 +605,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 1080
   height: 1920
-  uiBlackType: 0
+  uiBlackType: 3

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -59,7 +58,7 @@ namespace SkierFramework
         }
 
         /// <summary>
-        /// 递归的将所有孩子层级设置正确
+        /// 递归的将所有孩子层级设置正确：一些默认摆在UI上的特效等正确分配层级
         /// </summary>
         protected int SortOrder(Transform target, int order)
         {
