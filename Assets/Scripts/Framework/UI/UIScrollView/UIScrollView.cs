@@ -154,6 +154,11 @@ namespace SkierFramework
                 m_CountOfOtherAxis = Math.Max(1, m_CountOfOtherAxis);
             }
 
+            if (m_AxisType == Axis.Horizontal)
+                m_VerticalCount = m_CountOfOtherAxis;
+            else
+                m_HorizontalCount = m_CountOfOtherAxis;
+
             int axisCount = Mathf.CeilToInt(dataList.Count * 1.0f / m_CountOfOtherAxis);
             switch (m_AxisType)
             {
@@ -268,54 +273,6 @@ namespace SkierFramework
                     break;
             }
 
-            // 这里排序loopItem为了让item尽量重复用同一个，而不是在拖拽时不断变化
-            //if (m_LoopItems.Count > 0)
-            //{
-            //    int dis = m_LoopItems[0].Index - index;
-            //    List<UILoopItem> temp = ListPool<UILoopItem>.Get();
-            //    if (dis > 0)
-            //    {
-            //        for (int i = m_LoopItems.Count - 1; i >= 0; i--)
-            //        {
-            //            int newIndex = i + dis;
-            //            if (newIndex >= 0 && newIndex < m_LoopItems.Count)
-            //            {
-            //                m_LoopItems[newIndex] = m_LoopItems[i];
-            //                m_LoopItems[i] = null;
-            //            }
-            //            else
-            //            {
-            //                temp.Add(m_LoopItems[i]);
-            //            }
-            //        }
-            //    }
-            //    else if (dis < 0)
-            //    {
-            //        for (int i = 0; i < m_LoopItems.Count; i++)
-            //        {
-            //            int newIndex = i + dis;
-            //            if (newIndex >= 0 && newIndex < m_LoopItems.Count)
-            //            {
-            //                m_LoopItems[newIndex] = m_LoopItems[i];
-            //                m_LoopItems[i] = null;
-            //            }
-            //            else
-            //            {
-            //                temp.Add(m_LoopItems[i]);
-            //            }
-            //        }
-            //    }
-            //    for (int i = 0; i < m_LoopItems.Count; i++)
-            //    {
-            //        if (m_LoopItems[i] == null)
-            //        {
-            //            m_LoopItems[i] = temp[0];
-            //            temp.RemoveAt(0);
-            //        }
-            //    }
-            //    ListPool<UILoopItem>.Release(temp);
-            //}
-
             for (int i = 0; i < maxCount; i++)
             {
                 int listIndex = index + i;
@@ -361,9 +318,6 @@ namespace SkierFramework
                         UILoopItem loopItem = go.GetOrAddComponent(m_ItemType) as UILoopItem;
                         loopItem.UIScrollView = this;
                         m_LoopItems.Add(loopItem);
-                        //if (m_LoopItems.Count > listIndex)
-                        //else
-                        //    m_LoopItems.Insert(listIndex, loopItem);
                         loopItem.UpdateData(m_Datas, listIndex, m_UserData);
                     }
                 }
