@@ -20,7 +20,10 @@ namespace SkierFramework
 
         public void UpdateData(IList dataList, int index, object userData)
         {
-            OnInit();
+            if (!isInit)
+            {
+                OnInit();
+            }
             m_Index = index;
             m_RectTransform.localPosition = Vector3.zero;
             m_RectTransform.anchoredPosition = UIScrollView.GetLocalPositionByIndex(index);

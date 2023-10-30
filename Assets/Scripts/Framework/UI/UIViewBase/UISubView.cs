@@ -6,7 +6,7 @@ namespace SkierFramework
 {
     public class UISubView : MonoBehaviour, IBindableUI
     {
-        private bool isBind = false;
+        protected bool isInit = false;
 
         private void Awake()
         {
@@ -32,20 +32,29 @@ namespace SkierFramework
 
         private void Bind()
         {
-            if (isBind) return;
+            if (isInit) return;
             var uIControlData = GetComponent<UIControlData>();
             if (uIControlData != null)
                 uIControlData.BindDataTo(this);
-            isBind = true;
+            isInit = true;
         }
 
-        public virtual void OnInit() { Bind(); }
+        public virtual void OnInit() {
+            if (isInit) return;
+            Bind();
+        }
 
         public virtual void OnAddListener() { }
 
         public virtual void OnRemoveListener() { }
 
-        public virtual void OnOpen() { Bind(); }
+        public virtual void OnOpen()
+        {
+            if (!isInit)
+            {
+                OnInit();
+            }
+        }
 
         public virtual void OnClose() { }
 

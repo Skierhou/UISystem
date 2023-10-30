@@ -75,7 +75,7 @@ namespace SkierFramework
 
         private Tweener m_Tweener;
 
-        public event Action<int> OnSelectChanged;
+        public Action<int> OnSelectChanged;
         public int SelectIndex => m_SelectIndex;
         public List<UILoopItem> LoopItems => m_LoopItems;
         public int CurrentIndex => m_CurrentIndex;
@@ -126,11 +126,8 @@ namespace SkierFramework
             m_ChildWidth = rect.rect.width * rect.transform.localScale.x;
             m_ChildHeight = rect.rect.height * rect.transform.localScale.y;
 
-            var parent = (m_Content.parent as RectTransform);
-            if (parentRect != parent.rect || m_AlignType != AlignType.Center)
-            {
-                parentRect = parent.rect;
-            }
+            var parent = m_ScrollRect.transform as RectTransform;
+            parentRect = parent.rect;
             m_HorizontalCount = Mathf.CeilToInt((parentRect.width - m_HorizontalStartSpace) / (m_ChildWidth + m_HorizontalSpace));
             m_VerticalCount = Mathf.CeilToInt((parentRect.height - m_VerticalStartSpace) / (m_ChildHeight + m_VerticalSpace));
 
@@ -158,7 +155,6 @@ namespace SkierFramework
             }
 
             int axisCount = Mathf.CeilToInt(dataList.Count * 1.0f / m_CountOfOtherAxis);
-            var scroll = m_ScrollRect.transform as RectTransform;
             switch (m_AxisType)
             {
                 case Axis.Horizontal:
@@ -173,16 +169,17 @@ namespace SkierFramework
                     m_Content.sizeDelta = new Vector2(axisCount * m_ChildWidth + (axisCount - 1) * m_HorizontalSpace + m_HorizontalStartSpace * 2, 0);
                     if (m_AlignType == AlignType.Center)
                     {
+                        var viewPort = m_Content.parent as RectTransform;
+                        viewPort.anchorMin = new Vector2(0.5f, 0.5f);
+                        viewPort.anchorMax = new Vector2(0.5f, 0.5f);
+                        viewPort.pivot = new Vector2(0.5f, 0.5f);
+                        viewPort.anchoredPosition = Vector2.zero;
+                        viewPort.sizeDelta = new Vector2(m_Content.sizeDelta.x, parentRect.height);
                         int verCount = Mathf.FloorToInt((parentRect.height - m_VerticalStartSpace) / (m_ChildHeight + m_VerticalSpace));
                         if (verCount > m_Datas.Count)
                         {
-                            scroll.SetSizeWithCurrentAnchors(Axis.Vertical, (m_ChildHeight + m_VerticalSpace) * m_Datas.Count - m_VerticalSpace + m_VerticalStartSpace * 2);
+                            viewPort.sizeDelta = new Vector2(m_Content.sizeDelta.x, (m_ChildHeight + m_VerticalSpace) * m_Datas.Count - m_VerticalSpace + m_VerticalStartSpace * 2);
                         }
-                        else
-                        {
-                            scroll.SetSizeWithCurrentAnchors(Axis.Vertical, parentRect.height);
-                        }
-                        scroll.SetSizeWithCurrentAnchors(Axis.Horizontal, m_Content.sizeDelta.x);
                     }
                     break;
                 case Axis.Vertical:
@@ -197,16 +194,17 @@ namespace SkierFramework
                     m_Content.sizeDelta = new Vector2(0, axisCount * m_ChildHeight + (axisCount - 1) * m_VerticalSpace + m_VerticalStartSpace * 2);
                     if (m_AlignType == AlignType.Center)
                     {
+                        var viewPort = m_Content.parent as RectTransform;
+                        viewPort.anchorMin = new Vector2(0.5f, 0.5f);
+                        viewPort.anchorMax = new Vector2(0.5f, 0.5f);
+                        viewPort.pivot = new Vector2(0.5f, 0.5f);
+                        viewPort.anchoredPosition = Vector2.zero;
+                        viewPort.sizeDelta = new Vector2(parentRect.width, m_Content.sizeDelta.y);
                         int horCount = Mathf.CeilToInt((parentRect.width - m_HorizontalStartSpace) / (m_ChildWidth + m_HorizontalSpace));
                         if (horCount > m_Datas.Count)
                         {
-                            scroll.SetSizeWithCurrentAnchors(Axis.Horizontal, (m_ChildWidth + m_HorizontalSpace) * m_Datas.Count - m_HorizontalSpace + m_HorizontalStartSpace * 2);
+                            viewPort.sizeDelta = new Vector2((m_ChildWidth + m_HorizontalSpace) * m_Datas.Count - m_HorizontalSpace + m_HorizontalStartSpace * 2, m_Content.sizeDelta.y);
                         }
-                        else
-                        {
-                            scroll.SetSizeWithCurrentAnchors(Axis.Horizontal, parentRect.width);
-                        }
-                        scroll.SetSizeWithCurrentAnchors(Axis.Vertical, m_Content.sizeDelta.y);
                     }
                     break;
             }
@@ -398,16 +396,13 @@ namespace SkierFramework
                         case AlignType.Center:
                         case AlignType.Left:
                         case AlignType.Top:
-                            //y = -remain * (m_ChildHeight + m_VerticalSpace);
                             x = m_HorizontalStartSpace + index * (m_ChildWidth + m_HorizontalSpace);
                             break;
                         case AlignType.Right:
                         case AlignType.Bottom:
-                            //y = remain * (m_ChildHeight + m_VerticalSpace);
                             x = m_HorizontalStartSpace - index * (m_ChildWidth + m_HorizontalSpace);
                             break;
                         default:
-                            //y = (-remain + m_CountOfOtherAxis * 0.5f) * (m_ChildWidth + m_HorizontalSpace) + m_Content.rect.height * 0.5f;
                             break;
                     }
                     break;
@@ -419,15 +414,12 @@ namespace SkierFramework
                         case AlignType.Left:
                         case AlignType.Top:
                             y = -m_VerticalStartSpace - index * (m_ChildHeight + m_VerticalSpace);
-                            //x = remain * (m_ChildWidth + m_HorizontalSpace);
                             break;
                         case AlignType.Right:
                         case AlignType.Bottom:
                             y = m_VerticalStartSpace + index * (m_ChildHeight + m_VerticalSpace);
-                            //x = -remain * (m_ChildWidth + m_HorizontalSpace);
                             break;
                         default:
-                            //x = (remain - m_CountOfOtherAxis * 0.5f) * (m_ChildWidth + m_HorizontalSpace) + m_Content.rect.width * 0.5f;
                             break;
                     }
                     break;
@@ -578,12 +570,11 @@ namespace SkierFramework
 
         private void Update()
         {
-            if (m_Datas == null || m_PrefabPool == null || m_ItemType == null) return;
+            if (m_Datas == null || m_Datas.Count == 0 || m_PrefabPool == null || m_ItemType == null) return;
 
-            var parent = (m_Content.parent as RectTransform);
+            var parent = (m_ScrollRect.transform as RectTransform);
             if (parentRect != parent.rect)
             {
-                parentRect = parent.rect;
                 UpdateList(m_Datas, m_PrefabPool.Prefab, m_ItemType, true, m_UserData);
             }
         }
