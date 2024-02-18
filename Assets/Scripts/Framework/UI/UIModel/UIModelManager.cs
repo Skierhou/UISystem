@@ -17,9 +17,9 @@ namespace SkierFramework
 
         public Camera UICamera => m_UICamera;
 
-        public override void OnInitilize()
+        public override void OnInitialize()
         {
-            base.OnInitilize();
+            base.OnInitialize();
 
             //m_UICamera = GameObject.Find("UICamera").GetOrAddComponent<Camera>();
 

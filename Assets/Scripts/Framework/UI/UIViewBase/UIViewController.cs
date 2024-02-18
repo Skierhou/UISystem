@@ -16,7 +16,7 @@ namespace SkierFramework
         public bool isWindow;
 
         public UIView uiView;
-        public UIViewAnim uiViewConfig;
+        public UIViewAnim uiViewAnim;
         public bool isLoading = false;
         public bool isOpen = false;
         public bool isPause = false;
@@ -46,7 +46,7 @@ namespace SkierFramework
 
                 isLoading = false;
                 uiView = (UIView)go.GetOrAddComponent(uiViewType);
-                uiViewConfig = go.GetComponent<UIViewAnim>();
+                uiViewAnim = go.GetComponent<UIViewAnim>();
                 uiView.transform.SetParentEx(uiLayer.canvas.transform);
                 RectTransform rectTransform = uiView.transform as RectTransform;
 
@@ -104,9 +104,9 @@ namespace SkierFramework
                     TrueClose();
                 }
                 TrueOpen(userData, callback);
-                if (uiViewConfig != null)
+                if (uiViewAnim != null)
                 {
-                    uiViewConfig.Open();
+                    uiViewAnim.Open();
                 }
             }
         }
@@ -118,9 +118,9 @@ namespace SkierFramework
 
             if (uiView != null)
             {
-                if (uiViewConfig != null)
+                if (uiViewAnim != null)
                 {
-                    uiViewConfig.Close(() => { TrueClose(callback); });
+                    uiViewAnim.Close(() => { TrueClose(callback); });
                 }
                 else
                 {
@@ -139,7 +139,7 @@ namespace SkierFramework
                 GameObject.Destroy(uiView.gameObject);
             }
             uiView = null;
-            uiViewConfig = null;
+            uiViewAnim = null;
             isLoading = false;
             isOpen = false;
             order = 0;
@@ -159,6 +159,7 @@ namespace SkierFramework
         private void TrueClose(Action callback = null)
         {
             uiLayer.CloseUI(this);
+            // 刷新一下显示
             AddTopViewNum(-100000);
             SetVisible(false);
             uiView.OnPause();

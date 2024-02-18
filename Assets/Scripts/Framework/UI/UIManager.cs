@@ -45,10 +45,10 @@ namespace SkierFramework
 
         private void Awake()
         {
-            Initilize();
+            Initialize();
         }
 
-        private void Initilize()
+        private void Initialize()
         {
             _layers = new Dictionary<UILayer, UILayerLogic>();
             _viewControllers = new Dictionary<UIType, UIViewController>();
@@ -95,6 +95,7 @@ namespace SkierFramework
 
         private void Update()
         {
+            // TODO 不应该Update设置应该放在屏幕状态变动事件里
             ChangeOrCreateBlack();
         }
 

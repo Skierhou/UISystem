@@ -29,6 +29,18 @@ namespace SkierFramework
             _poolName = poolName;
         }
 
+        public static PrefabPool Get(string poolName)
+        {
+            if (!string.IsNullOrEmpty(poolName))
+            {
+                if (s_Pools.TryGetValue(poolName, out var prefabPool))
+                {
+                    return prefabPool;
+                }
+            }
+            return null;
+        }
+
         public static PrefabPool Create(GameObject prefab, string poolName = null)
         {
             if (prefab == null) return null;

@@ -56,9 +56,9 @@ namespace SkierFramework
             get => _loadingAssetCount > 0;
         }
 
-        public override void OnInitilize()
+        public override void OnInitialize()
         {
-            base.OnInitilize();
+            base.OnInitialize();
             _instancePool = new InstancePool();
         }
 
@@ -325,28 +325,6 @@ namespace SkierFramework
                 _loadedAssetInstanceCountDic[path]++;
             }
             callback?.Invoke(invokeResult);
-        }
-        #endregion
-
-        #region 空Obj
-        private Stack<GameObject> _emptyObjPool = new Stack<GameObject>();
-        public GameObject InstantiateEmptyObj()
-        {
-            if (_emptyObjPool.Count > 0)
-            {
-                var obj = _emptyObjPool.Pop();
-                obj.SetActive(true);
-                return obj;
-            }
-            else
-            {
-                return new GameObject();
-            }
-        }
-        public void RecycleEmptyObj(GameObject obj)
-        {
-            obj.SetActive(false);
-            _emptyObjPool.Push(obj);
         }
         #endregion
 
