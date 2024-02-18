@@ -22,15 +22,15 @@ public class UICreateWindow : EditorWindow
         UICreateWindow.OpenWindow().uiPrefab = Selection.activeObject as GameObject;
     }
 
-    [MenuItem("Tools/UI创建")]
+    [MenuItem("Tools/UI管理")]
     public static UICreateWindow OpenWindow()
     {
-        var window = GetWindow<UICreateWindow>("UI创建");
+        var window = GetWindow<UICreateWindow>("UI管理");
         if (window == null)
         {
-            window = CreateWindow<UICreateWindow>("UI创建");
+            window = CreateWindow<UICreateWindow>("UI管理");
         }
-        window.name = "UI创建";
+        window.name = "UI管理";
         window.Focus();
         return window;
     }
@@ -56,6 +56,7 @@ public class UICreateWindow : EditorWindow
 
     private void OnGUI()
     {
+        EditorGUILayout.LabelField("通过[Tools/UI管理]可以打开");
         scroll = EditorGUILayout.BeginScrollView(scroll);
         {
             EditorGUILayout.HelpBox("UI基础文件", MessageType.Info);
@@ -163,20 +164,24 @@ public class UICreateWindow : EditorWindow
                                 if (EditorUtility.DisplayDialog("是否确认删除", $"请确认是否删除:\n{uiScriptPath}\n同时会清除Json，UIType中相关数据", "确定", "取消"))
                                 {
                                     // 清除UIType中指定类型
-                                    var newStr = Regex.Replace(File.ReadAllText(UIType), $"\t\t{uiName},\n", "");
+                                    var uiTypeStr = File.ReadAllText(UIType);
+                                    int index = uiTypeStr.IndexOf(uiName);
+                                    int leftIndex = uiTypeStr.Substring(0, index).LastIndexOf(',') + 1;
+                                    int rightIndex = uiTypeStr.Substring(index, uiTypeStr.Length - index).IndexOf(',') + index + 1;
+                                    var newStr = uiTypeStr.Substring(0, leftIndex) + uiTypeStr.Substring(rightIndex, uiTypeStr.Length - rightIndex);
                                     File.Delete(UIType);
                                     File.WriteAllText(UIType, newStr);
                                     // 清除UIConfig中的指定类型
                                     var json = File.ReadAllText(UIConfig);
-                                    int index = json.IndexOf($"\"uiType\": \"{uiName}\"");
+                                    index = json.IndexOf($"\"uiType\": \"{uiName}\"");
                                     if (index >= 0)
                                     {
-                                        int leftIndex = json.Substring(0, index).LastIndexOf(',');
+                                        leftIndex = json.Substring(0, index).LastIndexOf(',');
                                         if (leftIndex < 0)
                                         {
                                             leftIndex = json.Substring(0, index).LastIndexOf('{');
                                         }
-                                        int rightIndex = json.Substring(index, json.Length - index).IndexOf('}') + index + 2;
+                                        rightIndex = json.Substring(index, json.Length - index).IndexOf('}') + index + 2;
                                         json = json.Substring(0, leftIndex) + json.Substring(rightIndex, json.Length - rightIndex);
                                         File.Delete(UIConfig);
                                         File.WriteAllText(UIConfig, json);
