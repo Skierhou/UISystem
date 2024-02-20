@@ -36,6 +36,8 @@ public class UICreateWindow : EditorWindow
     }
     #endregion
 
+    private string m_Input;
+
     private Vector2 scroll;
     private Vector2 scroll2;
     private Vector2 scroll3;
@@ -45,6 +47,8 @@ public class UICreateWindow : EditorWindow
     private string saveUIPath;
     private string uiName;
     public GameObject uiPrefab;
+    private Dictionary<string, string> uiNames = new Dictionary<string, string>();
+    private Dictionary<string, string> uiPrefabs = new Dictionary<string, string>();
 
     private void OnEnable()
     {
@@ -52,6 +56,19 @@ public class UICreateWindow : EditorWindow
         TryGetPath(ref UIType, nameof(UIType), ".cs");
         TryGetPath(ref UIConfig, nameof(UIConfig), ".json");
         saveUIPath = PlayerPrefs.GetString(nameof(saveUIPath), "Assets/Scripts");
+
+        uiPrefabs.Clear();
+        uiNames.Clear();
+        string[] strs = Enum.GetNames(typeof(UIType));
+        foreach (var str in strs)
+        {
+            if (str.Equals("Max")) continue;
+
+            var prefabPath = GetUIPrefab(str);
+            if (string.IsNullOrEmpty(prefabPath)) continue;
+            var scriptPath = GetUIScript(str, true);
+            uiNames.AddOrUpdate(str, scriptPath);
+        }
     }
 
     private void OnGUI()
@@ -71,14 +88,16 @@ public class UICreateWindow : EditorWindow
                 scroll2 = EditorGUILayout.BeginScrollView(scroll2, "box", GUILayout.Width(position.width * 0.4f - 6));
                 {
                     EditorGUILayout.HelpBox("已创建的UI", MessageType.Info);
+                    m_Input = EditorGUILayout.TextField(m_Input, EditorStyles.toolbarSearchField, GUILayout.Height(20));
                     string[] strs = Enum.GetNames(typeof(UIType));
                     foreach (var str in strs)
                     {
                         if (str.Equals("Max")) continue;
+                        if (!string.IsNullOrEmpty(m_Input) && !str.Contains(m_Input)) continue;
 
                         var prefabPath = GetUIPrefab(str);
                         var scriptPath = GetUIScript(str);
-                        if (string.IsNullOrEmpty(prefabPath)) continue;
+                        if (string.IsNullOrEmpty(prefabPath) || string.IsNullOrEmpty(scriptPath)) continue;
 
                         var defaultColor = GUI.color;
                         if (str.Equals(uiName))
@@ -111,6 +130,7 @@ public class UICreateWindow : EditorWindow
                             {
                                 var newPath = EditorUtility.OpenFolderPanel("UI生成路径", saveUIPath, "");
                                 saveUIPath = newPath.Replace(Application.dataPath, "Assets");
+                                PlayerPrefs.SetString(nameof(saveUIPath), saveUIPath);
                             }
                             if (uiPrefab != null)
                             {
@@ -191,6 +211,7 @@ public class UICreateWindow : EditorWindow
 
                                     AssetDatabase.SaveAssets();
                                     AssetDatabase.Refresh();
+                                    uiNames.Remove(uiName);
                                 }
                             }
                             GUI.color = defaultColor;
@@ -228,8 +249,18 @@ public class UICreateWindow : EditorWindow
         }
     }
 
-    private string GetUIScript(string name)
+    private string GetUIScript(string name, bool tryFind = false)
     {
+        if (uiNames.TryGetValue(name, out string path))
+        {
+            return path;
+        }
+
+        if (!tryFind)
+        {
+            return string.Empty;
+        }
+
         string[] ids = AssetDatabase.FindAssets(name);
         if (ids != null)
         {
@@ -242,11 +273,16 @@ public class UICreateWindow : EditorWindow
                 }
             }
         }
-        return null;
+        return string.Empty;
     }
 
     private string GetUIPrefab(string name)
     {
+        if (uiPrefabs.TryGetValue(name, out var path))
+        {
+            return path;
+        }
+
         var json = File.ReadAllText(UIConfig);
         int index = json.IndexOf($"\"uiType\": \"{name}\"");
         if (index >= 0)
@@ -255,6 +291,7 @@ public class UICreateWindow : EditorWindow
             int leftIndex = json.Substring(index, json.Length - index).IndexOf(sign) + index + sign.Length;
             int rightIndex = json.Substring(leftIndex, json.Length - leftIndex).IndexOf(',') + leftIndex;
             string str = json.Substring(leftIndex, rightIndex - leftIndex).Trim().Replace("\"", "");
+            uiPrefabs.AddOrUpdate(name, str);
             return str;
         }
         return null;
