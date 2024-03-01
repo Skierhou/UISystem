@@ -8,10 +8,10 @@ namespace SkierFramework
     [System.Serializable]
     public class UIConfigJson
     {
-        public string path;
         public string uiType;
-        public string uiLayer;
+        public string path;
         public bool isWindow;
+        public string uiLayer;
     }
 
     public class UIConfig

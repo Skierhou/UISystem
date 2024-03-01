@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using SkierFramework;
 using System;
+using Newtonsoft.Json;
 
 public class UICreateWindow : EditorWindow
 {
@@ -48,7 +49,10 @@ public class UICreateWindow : EditorWindow
     private string uiName;
     public GameObject uiPrefab;
     private Dictionary<string, string> uiNames = new Dictionary<string, string>();
-    private Dictionary<string, string> uiPrefabs = new Dictionary<string, string>();
+    private Dictionary<string, UIConfigJson> uiJsonDatas = new Dictionary<string, UIConfigJson>();
+
+    private bool isWindow = true;
+    private UILayer layer = UILayer.NormalLayer;
 
     private void OnEnable()
     {
@@ -57,15 +61,15 @@ public class UICreateWindow : EditorWindow
         TryGetPath(ref UIConfig, nameof(UIConfig), ".json");
         saveUIPath = PlayerPrefs.GetString(nameof(saveUIPath), "Assets/Scripts");
 
-        uiPrefabs.Clear();
+        uiJsonDatas.Clear();
         uiNames.Clear();
         string[] strs = Enum.GetNames(typeof(UIType));
         foreach (var str in strs)
         {
             if (str.Equals("Max")) continue;
 
-            var prefabPath = GetUIPrefab(str);
-            if (string.IsNullOrEmpty(prefabPath)) continue;
+            var jsonData = GetUIJson(str);
+            if (jsonData == null || string.IsNullOrEmpty(jsonData.path)) continue;
             var scriptPath = GetUIScript(str, true);
             uiNames.AddOrUpdate(str, scriptPath);
         }
@@ -95,9 +99,9 @@ public class UICreateWindow : EditorWindow
                         if (str.Equals("Max")) continue;
                         if (!string.IsNullOrEmpty(m_Input) && !str.Contains(m_Input)) continue;
 
-                        var prefabPath = GetUIPrefab(str);
+                        var jsonData = GetUIJson(str);
                         var scriptPath = GetUIScript(str);
-                        if (string.IsNullOrEmpty(prefabPath) || string.IsNullOrEmpty(scriptPath)) continue;
+                        if (jsonData == null || string.IsNullOrEmpty(jsonData.path) || string.IsNullOrEmpty(scriptPath)) continue;
 
                         var defaultColor = GUI.color;
                         if (str.Equals(uiName))
@@ -107,9 +111,9 @@ public class UICreateWindow : EditorWindow
                         EditorGUILayout.BeginHorizontal("box");
                         if (GUILayout.Button("选中"))
                         {
-                            uiPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                            uiPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(jsonData.path);
                         }
-                        EditorGUILayout.ObjectField(AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath), typeof(GameObject), true);
+                        EditorGUILayout.ObjectField(AssetDatabase.LoadAssetAtPath<GameObject>(jsonData.path), typeof(GameObject), true);
                         EditorGUILayout.ObjectField(AssetDatabase.LoadAssetAtPath<TextAsset>(scriptPath), typeof(TextAsset), true);
                         EditorGUILayout.EndHorizontal();
                         GUI.color = defaultColor;
@@ -137,6 +141,9 @@ public class UICreateWindow : EditorWindow
                                 EditorGUILayout.TextField("UI生成路径", $"{saveUIPath}/{uiName}.cs");
                             }
 
+                            isWindow = EditorGUILayout.Toggle("是否为窗口", isWindow);
+                            layer = (UILayer)EditorGUILayout.EnumPopup("UILayer设置", layer);
+
                             var defaultColor = GUI.color;
                             GUI.color = Color.green;
                             if (GUILayout.Button("创建UI"))
@@ -152,18 +159,20 @@ public class UICreateWindow : EditorWindow
                                 string newPath = $"{saveUIPath}/{uiName}.cs";
                                 File.WriteAllText(newPath, str);
 
-                                // 生成UIConfig.json配置
-                                string newStr = Regex.Replace(File.ReadAllText(UIConfig), "]", string.Format(",\t{{\n" +
-                                    "\t\t\"uiType\": \"{0}\",\n" +
-                                    "\t\t\"path\": \"{1}\",\n" +
-                                    "\t\t\"isWindow\": true,\n" +
-                                    "\t\t\"uiLayer\": \"NormalLayer\"\n" +
-                                    "\t}}\n]", uiName, AssetDatabase.GetAssetPath(uiPrefab)));
-                                File.Delete(UIConfig);
-                                File.WriteAllText(UIConfig, newStr);
+                                var jsonData = new UIConfigJson
+                                {
+                                    uiType = uiName,
+                                    path = AssetDatabase.GetAssetPath(uiPrefab),
+                                    isWindow = isWindow,
+                                    uiLayer = layer.ToString(),
+                                };
+
+                                uiJsonDatas.Add(uiName, jsonData);
+                                uiNames.Add(uiName, newPath);
+                                SaveJson();
 
                                 // 生成UIType
-                                newStr = Regex.Replace(File.ReadAllText(UIType), "Max,", $"{uiName},\n\t\tMax,");
+                                var newStr = Regex.Replace(File.ReadAllText(UIType), "Max,", $"{uiName},\n\t\tMax,");
                                 File.Delete(UIType);
                                 File.WriteAllText(UIType, newStr);
 
@@ -176,8 +185,23 @@ public class UICreateWindow : EditorWindow
                         }
                         else
                         {
+                            var jsonData = GetUIJson(uiName);
+
                             EditorGUILayout.ObjectField("已创建脚本", AssetDatabase.LoadAssetAtPath(uiScriptPath, typeof(TextAsset)), typeof(TextAsset), true);
+                            jsonData.isWindow = EditorGUILayout.Toggle("是否为窗口", jsonData.isWindow);
+                            Enum.TryParse(jsonData.uiLayer, out UILayer layer);
+                            jsonData.uiLayer = EditorGUILayout.EnumPopup("UILayer设置", layer).ToString();
+
                             var defaultColor = GUI.color;
+                            GUI.color = Color.green;
+                            if (GUILayout.Button("保存设置"))
+                            {
+                                SaveJson();
+                                AssetDatabase.SaveAssets();
+                                AssetDatabase.Refresh();
+                            }
+                            GUI.color = defaultColor;
+
                             GUI.color = Color.red;
                             if (GUILayout.Button("删除UI脚本"))
                             {
@@ -192,20 +216,9 @@ public class UICreateWindow : EditorWindow
                                     File.Delete(UIType);
                                     File.WriteAllText(UIType, newStr);
                                     // 清除UIConfig中的指定类型
-                                    var json = File.ReadAllText(UIConfig);
-                                    index = json.IndexOf($"\"uiType\": \"{uiName}\"");
-                                    if (index >= 0)
-                                    {
-                                        leftIndex = json.Substring(0, index).LastIndexOf(',');
-                                        if (leftIndex < 0)
-                                        {
-                                            leftIndex = json.Substring(0, index).LastIndexOf('{');
-                                        }
-                                        rightIndex = json.Substring(index, json.Length - index).IndexOf('}') + index + 2;
-                                        json = json.Substring(0, leftIndex) + json.Substring(rightIndex, json.Length - rightIndex);
-                                        File.Delete(UIConfig);
-                                        File.WriteAllText(UIConfig, json);
-                                    }
+                                    uiJsonDatas.Remove(uiName);
+                                    uiNames.Remove(uiName);
+                                    SaveJson();
                                     // 删除文件
                                     File.Delete(uiScriptPath);
 
@@ -227,6 +240,20 @@ public class UICreateWindow : EditorWindow
             EditorGUILayout.EndHorizontal();
         }
         EditorGUILayout.EndScrollView();
+    }
+
+    private void SaveJson()
+    {
+        List<UIConfigJson> list = new List<UIConfigJson>();
+        foreach (var name in uiNames.Keys)
+        {
+            if (uiJsonDatas.TryGetValue(name, out var data))
+            {
+                list.Add(data);
+            }
+        }
+        File.Delete(UIConfig);
+        File.WriteAllText(UIConfig, JsonConvert.SerializeObject(list, Formatting.Indented));
     }
 
     private void TryGetPath(ref string path, string pathName, string endsWith)
@@ -261,6 +288,8 @@ public class UICreateWindow : EditorWindow
             return string.Empty;
         }
 
+        if (GetUIJson(name) == null) return string.Empty;
+
         string[] ids = AssetDatabase.FindAssets(name);
         if (ids != null)
         {
@@ -276,23 +305,27 @@ public class UICreateWindow : EditorWindow
         return string.Empty;
     }
 
-    private string GetUIPrefab(string name)
+    private UIConfigJson GetUIJson(string name)
     {
-        if (uiPrefabs.TryGetValue(name, out var path))
+        if (uiJsonDatas.Count == 0)
         {
-            return path;
+            try
+            {
+                var json = File.ReadAllText(UIConfig);
+                var list = JsonConvert.DeserializeObject<List<UIConfigJson>>(json);
+                foreach (var item in list)
+                {
+                    uiJsonDatas.AddOrUpdate(item.uiType, item);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
-
-        var json = File.ReadAllText(UIConfig);
-        int index = json.IndexOf($"\"uiType\": \"{name}\"");
-        if (index >= 0)
+        if (uiJsonDatas.TryGetValue(name, out var jsonData))
         {
-            string sign = "\"path\":";
-            int leftIndex = json.Substring(index, json.Length - index).IndexOf(sign) + index + sign.Length;
-            int rightIndex = json.Substring(leftIndex, json.Length - leftIndex).IndexOf(',') + leftIndex;
-            string str = json.Substring(leftIndex, rightIndex - leftIndex).Trim().Replace("\"", "");
-            uiPrefabs.AddOrUpdate(name, str);
-            return str;
+            return jsonData;
         }
         return null;
     }

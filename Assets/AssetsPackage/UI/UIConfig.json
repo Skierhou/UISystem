@@ -1,26 +1,26 @@
 [
-	{
-		"uiType": "UILoadingView",
-		"path": "Assets/AssetsPackage/UI/Prefabs/UILoadingView/UILoadingView.prefab",
-		"isWindow": true,
-		"uiLayer": "TipLayer"
-	}
-,	{
-		"uiType": "UILoginView",
-		"path": "Assets/AssetsPackage/UI/Prefabs/UILoginView/UILoginView.prefab",
-		"isWindow": false,
-		"uiLayer": "NormalLayer"
-	}
-,	{
-		"uiType": "UIMessageBoxView",
-		"path": "Assets/AssetsPackage/UI/Prefabs/UIMessageBox/UIMessageBoxView.prefab",
-		"isWindow": true,
-		"uiLayer": "NormalLayer"
-	}
-,	{
-		"uiType": "UITestView",
-		"path": "Assets/AssetsPackage/UI/Prefabs/UILoginView/UITestView.prefab",
-		"isWindow": false,
-		"uiLayer": "NormalLayer"
-	}
+  {
+    "uiType": "UILoadingView",
+    "path": "Assets/AssetsPackage/UI/Prefabs/UILoadingView/UILoadingView.prefab",
+    "isWindow": true,
+    "uiLayer": "TipLayer"
+  },
+  {
+    "uiType": "UILoginView",
+    "path": "Assets/AssetsPackage/UI/Prefabs/UILoginView/UILoginView.prefab",
+    "isWindow": false,
+    "uiLayer": "NormalLayer"
+  },
+  {
+    "uiType": "UIMessageBoxView",
+    "path": "Assets/AssetsPackage/UI/Prefabs/UIMessageBox/UIMessageBoxView.prefab",
+    "isWindow": true,
+    "uiLayer": "NormalLayer"
+  },
+  {
+    "uiType": "UITestView",
+    "path": "Assets/AssetsPackage/UI/Prefabs/UILoginView/UITestView.prefab",
+    "isWindow": false,
+    "uiLayer": "NormalLayer"
+  }
 ]
